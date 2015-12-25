@@ -5,6 +5,7 @@ bool has_display = false; //is there a display or not
 volatile bool show_speed;
 int speed_pin = 3;
 int power_pin = 7;
+int motor_relay_pin = 5;
 volatile unsigned long last_time;
 uint16_t circumference = 1000; //circumference of the wheel in mm
 uint16_t damping_factor = 2;
@@ -38,16 +39,31 @@ int get_esc_out() {
 void power_motor() {
   motor_state = true;
   motor_speed = min(speed, max_speed);
+  //turn relay switch to motor
+  digitalWrite(motor_relay_pin, HIGH);
+  delay(100);
   esc.write(get_esc_out());
 }
 
+void stop_motor() {
+  motor_state = false;
+  motor_speed = 0;
+  //turn relay switch off.
+  //I think this should be done immediately to start regen
+  digitalWrite(motor_relay_pin, LOW);
+  esc.write(get_esc_out());
+}
 void setup()
 {
   esc.attach(9);
   pinMode(speed_pin, INPUT);
   pinMode(power_pin, INPUT);
-  attachInterrupt(speed_pin, update_speed, RISING); // no digitalPinToInterrupt function
-  attachInterrupt(power_pin, power_motor, RISING);
+  pinMode(motor_relay_pin, OUTPUT);
+  // If digitalPinToInterrupt breaks, here is the mapping:
+  // p->i: 3->0
+  attachInterrupt(digitalPinToInterrupt(speed_pin), update_speed, RISING);
+  attachInterrupt(digitalPinToInterrupt(power_pin), power_motor, RISING);
+  attachInterrupt(digitalPinToInterrupt(power_pin), stop_motor, FALLING);
   last_time = 0;
   speed = 0;
   motor_state = false;
