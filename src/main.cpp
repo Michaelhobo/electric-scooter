@@ -105,7 +105,7 @@ void setup()
   //digitalWrite(motor_relay_pin, LOW);
   digitalWrite(motor_relay_pin, HIGH);
   //digitalWrite(motor_relay_pin, LOW);
-  analogWrite(esc_pin, 80);
+  analogWrite(esc_pin, 0);
   // If digitalPinToInterrupt breaks, here is the mapping:
   // p->i: 3->0
   attachInterrupt(digitalPinToInterrupt(speed_pin), update_speed, RISING);
