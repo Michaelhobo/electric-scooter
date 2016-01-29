@@ -1,5 +1,5 @@
 #include "Arduino.h"
-bool has_display = false; //is there a display or not
+bool has_display = true; //is there a display or not
 volatile bool show_speed;
 int speed_pin = 3;
 int power_pin = 7;
@@ -20,14 +20,16 @@ volatile bool button_ok = true;
 void display_speed() {
   if (has_display) {
     prev_show_time = millis();
+    Serial.println(speed);
   }
 }
 void update_speed() {
   unsigned long new_time = millis();
   unsigned long diff = new_time - last_time;
-  uint16_t new_speed = circumference/diff; //speed in mm per millisecond
-  speed += new_speed / damping_factor; //LPF damping
+  double new_speed = circumference/diff; //speed in mm per millisecond
+  speed += (new_speed - speed) / damping_factor; //LPF damping
   last_time = new_time;
+  Serial.println("update_speed");
   if (show_speed) {
     display_speed();
   }
@@ -87,7 +89,7 @@ void test_change() {
     if (button_ok) {
       button_ok = false;
       Serial.print("test_fall triggered...");
-      analogWrite(esc_pin, 130);
+      analogWrite(esc_pin, 96);
       Serial.print("writing analog esc value...");
       Serial.println(millis());
     }
@@ -110,7 +112,7 @@ void setup()
   analogWrite(esc_pin, 90);
   // If digitalPinToInterrupt breaks, here is the mapping:
   // p->i: 3->0
-  attachInterrupt(digitalPinToInterrupt(speed_pin), update_speed, RISING);
+  attachInterrupt(digitalPinToInterrupt(speed_pin), update_speed, FALLING);
   //attachInterrupt(digitalPinToInterrupt(power_pin), power_motor, RISING);
   //attachInterrupt(digitalPinToInterrupt(power_pin), stop_motor, FALLING);
   //attachInterrupt(4, test_rise, RISING);
